@@ -185,6 +185,18 @@ function make_public_score_column_sortable() {
         for (var i = 0; i < rows.length; i++){
             table.append(rows[i]);
         }
+        updateIds();
+    });
+}
+
+function updateIds() {
+    var numbers = document.querySelectorAll('#list-container>div.list-block>div>table>tbody.list-item>tr.list-table-data>td.data.number');
+    var currNumber = 1;
+    numbers.forEach((e) => {
+        if ($(e).is(':visible')) {
+            e.innerHTML = "" + currNumber;
+            currNumber += 1;
+        }
     });
 }
 
