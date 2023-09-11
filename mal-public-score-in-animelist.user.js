@@ -121,16 +121,49 @@ function populate_public_score_column() {
 
     fetch_top_500_public_scores();
 
-    for_each_public_score_column_cell_do(function(cell, anime_id){
+    for_each_public_score_column_cell_do(function(cell, anime_id) {
         get_public_score_for_anime(anime_id, function (score) {
             cell.html('<a href="#" class="link">'+score+'</a>');
         });
     });
 
+    var listContainer = document.getElementById('list-container');
+    if (listContainer) {
+        new MutationObserver((mutations) => {
+            var firstMutation = mutations[0];
+
+            if (firstMutation.addedNodes === undefined || firstMutation.addedNodes[0] === undefined) {
+                return;
+            }
+
+            var mutatedNodeClassList = firstMutation.addedNodes[0].classList;
+
+            if (!mutatedNodeClassList.contains("list-table") && !mutatedNodeClassList.contains("list-item")) {
+                return;
+            }
+
+            $('.list-table tr td.score').each(function(index, cell) {
+                if (!cell.previousElementSibling.classList.contains("public-score")) {
+                    var newCell = document.createElement('td');
+                    newCell.classList.add("data");
+                    newCell.classList.add("public-score");
+                    cell.before(newCell);
+                }
+            });
+
+            for_each_public_score_column_cell_do(function(cell, anime_id) {
+                get_public_score_for_anime(anime_id, function (score) {
+                    cell.html('<a href="#" class="link">'+score+'</a>');
+                });
+            });
+        }).observe(listContainer, {
+            childList: true, subtree: true,
+        });
+    }
 }
 
 function make_public_score_column_sortable() {
-    function getCellValue(row, index){ return $(row).children('td').eq(index).text() }
+    function getCellValue(row, index){ return $(row).children('tr').eq(0).children('td').eq(index).text() }
     function comparer(index) {
         return function(a, b) {
             var valA = getCellValue(a, index), valB = getCellValue(b, index)
@@ -143,7 +176,7 @@ function make_public_score_column_sortable() {
     table_header.contents() .filter(function() { return this.nodeType == Node.TEXT_NODE; }).wrap('<a href="#"></a>');
     table_header.click(function() {
         var table = $(this).parents('table').eq(0);
-        var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()));
+        var rows = table.find('tbody:gt(0)').toArray().sort(comparer($(this).index()));
         this.asc = !this.asc;
         // default sort order is descending
         if (this.asc){
